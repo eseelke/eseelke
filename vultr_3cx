@@ -1,0 +1,38 @@
+#!/bin/sh
+
+apt-get update
+apt-get --with-new-pkgs upgrade -y
+apt-get -y install net-tools dphys-swapfile expect
+
+#setupconfig
+cat << EOF > /tmp/3cxinstall.exp
+#!/usr/bin/expect -f
+
+set env(TERM) vt100
+set env(SHELL) /bin/bash
+set env(HOME) /root
+
+set timeout -1
+spawn $env(SHELL)
+match_max 100000
+expect -exact "~# "
+send -- "apt-get -y install 3cxpbx\r"
+expect -exact "mqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqj"
+send -- "	"
+send -- "\r"
+expect -exact "Enter option: "
+send -- "1"
+expect eof
+EOF
+chmod +x /tmp/3cxinstall.exp
+
+# Install 3cxpbx
+wget -O- http://downloads-global.3cx.com/downloads/3cxpbx/public.key | apt-key add -
+echo "deb http://downloads-global.3cx.com/downloads/debian stretch main" | tee /etc/apt/sources.list.d/3cxpbx.list
+apt-get update
+apt-get -y install net-tools dphys-swapfile expect
+apt-get -y autoremove
+/tmp/3cxinstall.exp >> /tmp/3cxinstall.log 2>&1
+
+#To restart wizard
+#/usr/sbin/3CXWizard --cleanup
